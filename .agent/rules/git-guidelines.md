@@ -16,12 +16,12 @@ description: Ruleset that MUST be followed when executing ANY git command
 
 ## Project Slug:
 - PROJECTSLUG is a shortened name for the project to be used as an abbreviation for several things, example: JIRA tickets.
-- PROJECTSLUG for this project is: **ICON**
+- PROJECTSLUG for this project is: **YF**
 - Can be found in the `./project-metadata.md` file.
 
 ## Branch Naming:
 - Format: type/PROJECTSLUG-TICKET_NUMBER-hyphenated-short-description
-- Example: `feature/ICON-123-add-location-search`, `bugfix/ICON-234-fix-permission-crash`
+- Example: `feature/YF-123-add-location-search`, `bugfix/YF-234-fix-permission-crash`
 - Exception: Release branches should be named like this: `release/1.2.3`, no description or ticket number, just the version number.
 - Use imperative, hyphenated style for description.
 - Never assume ticket number. If missing, omit it.
@@ -30,7 +30,7 @@ description: Ruleset that MUST be followed when executing ANY git command
 ## Commit Messages:
 - ALWAYS use single line commit message
 - Format: PROJECTSLUG-TICKET_NUMBER: message
-- Example: `ICON-123: Add location permission handling`
+- Example: `YF-123: Add location permission handling`
 - Extract ticket number from branch name
 - If ticket is not identifiable, omit prefix and write message only.
 ## Example .gitignore Entries
