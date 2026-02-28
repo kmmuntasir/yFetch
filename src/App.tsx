@@ -1,3 +1,4 @@
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import useMovieStore from './store/use-movie-store';
 import HeroSlideshow from './components/HeroSlideshow/HeroSlideshow';
@@ -49,6 +50,16 @@ function HomePage() {
 }
 
 function App() {
+  const { query } = useMovieStore();
+
+  React.useEffect(() => {
+    if (query) {
+      document.title = `yFetch — Search: ${query}`;
+    } else {
+      document.title = 'yFetch — Browse & Download Movies';
+    }
+  }, [query]);
+
   return (
     <>
       <Header />

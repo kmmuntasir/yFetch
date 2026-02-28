@@ -3,6 +3,9 @@ import { fetchMovies as fetchMoviesApi } from '../services/api-client';
 import { DEFAULT_LIMIT } from '../constants/api-config';
 import type { Movie, Torrent, FilterParams, MovieState } from '../types/movie';
 
+// Module-level variable to store the current AbortController
+let currentAbortController: AbortController | null = null;
+
 const INITIAL_STATE = {
     query: '',
     quality: '',
@@ -47,13 +50,14 @@ const useMovieStore = create<MovieState>((set, get) => ({
 
     resetFilters: () => {
         set({
-            query: '',
-            quality: '',
-            genre: '',
-            minRating: 0,
-            sortBy: 'date_added',
-            orderBy: 'desc',
-            page: 1,
+            ...INITIAL_STATE,
+            // Keep modal and movies state initially until fetch completes
+            movies: get().movies,
+            movieCount: get().movieCount,
+            isLoading: get().isLoading,
+            error: get().error,
+            selectedMovie: get().selectedMovie,
+            isModalOpen: get().isModalOpen,
         });
         get().fetchMovies();
     },
@@ -61,6 +65,14 @@ const useMovieStore = create<MovieState>((set, get) => ({
     fetchMovies: async () => {
         const { query, quality, genre, minRating, sortBy, orderBy, page, limit } =
             get();
+
+        // Abort previous request if it exists
+        if (currentAbortController) {
+            currentAbortController.abort('New request initiated');
+        }
+
+        // Create new AbortController for this request
+        currentAbortController = new AbortController();
 
         set({ isLoading: true, error: null });
 
@@ -75,6 +87,7 @@ const useMovieStore = create<MovieState>((set, get) => ({
                 page,
                 limit,
                 with_rt_ratings: true,
+                signal: currentAbortController.signal,
             });
 
             set({
@@ -83,6 +96,15 @@ const useMovieStore = create<MovieState>((set, get) => ({
                 isLoading: false,
             });
         } catch (err) {
+            // Ignore AbortError, as it means a new request is taking over
+            if (err instanceof DOMException && err.name === 'AbortError') {
+                return;
+            }
+            // Also check for the custom reason we passed
+            if (err instanceof Error && err.message === 'New request initiated') {
+                return;
+            }
+
             set({
                 movies: [],
                 movieCount: 0,

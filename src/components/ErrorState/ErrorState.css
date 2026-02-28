@@ -1,0 +1,48 @@
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    text-align: center;
+    min-height: 50vh;
+}
+
+.error-state-icon {
+    width: 64px;
+    height: 64px;
+    color: #EF4444;
+    /* danger color */
+    margin-bottom: 24px;
+}
+
+.error-state-title {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.error-state-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    max-width: 400px;
+    margin-bottom: 32px;
+    line-height: 1.5;
+}
+
+.error-state-btn.primary-btn {
+    background-color: var(--accent);
+    color: #000;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 200ms ease;
+}
+
+.error-state-btn.primary-btn:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+}

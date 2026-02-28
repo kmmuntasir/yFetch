@@ -3,7 +3,7 @@ import useMovieStore from '../../store/use-movie-store';
 import './Pagination.css';
 
 const Pagination: React.FC = () => {
-    const { movieCount, limit, page, setPage, fetchMovies } = useMovieStore();
+    const { movieCount, limit, page, setPage } = useMovieStore();
 
     const totalPages = Math.ceil(movieCount / limit);
 
@@ -43,7 +43,7 @@ const Pagination: React.FC = () => {
     };
 
     return (
-        <section className="pagination-container" aria-label="Movie pagination">
+        <nav className="pagination-container" aria-label="Movie pagination">
             <div className="pagination-info">
                 Page {page} of {totalPages} ({movieCount.toLocaleString()} movies)
             </div>
@@ -79,7 +79,7 @@ const Pagination: React.FC = () => {
                     Next &rarr;
                 </button>
             </div>
-        </section>
+        </nav>
     );
 };
 

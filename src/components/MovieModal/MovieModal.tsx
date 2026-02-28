@@ -41,11 +41,43 @@ export default function MovieModal() {
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') closeModal();
+            if (e.key === 'Escape') {
+                closeModal();
+                return;
+            }
+
+            if (e.key === 'Tab') {
+                // simple focus trap
+                const modal = document.querySelector('.movie-modal-overlay');
+                if (!modal) return;
+
+                const focusableElements = modal.querySelectorAll(
+                    'a[href], button, textarea, input, select, iframe, [tabindex]:not([tabindex="-1"])'
+                ) as NodeListOf<HTMLElement>;
+
+                if (focusableElements.length === 0) return;
+
+                const firstElement = focusableElements[0];
+                const lastElement = focusableElements[focusableElements.length - 1];
+
+                if (e.shiftKey) {
+                    if (document.activeElement === firstElement) {
+                        lastElement.focus();
+                        e.preventDefault();
+                    }
+                } else {
+                    if (document.activeElement === lastElement) {
+                        firstElement.focus();
+                        e.preventDefault();
+                    }
+                }
+            }
         };
 
         if (isModalOpen) {
             window.addEventListener('keydown', handleKeyDown);
+            // Optionally, we could set focus to the first element when modal opens,
+            // but the first element is the close button which might be annoying.
         }
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isModalOpen, closeModal]);

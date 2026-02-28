@@ -12,12 +12,14 @@ export async function fetchMovies(
     const url = new URL(API_BASE_URL);
 
     Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
+        if (value !== undefined && value !== null && value !== '' && key !== 'signal') {
             url.searchParams.set(key, String(value));
         }
     });
 
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+        signal: params.signal,
+    });
 
     if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}`);

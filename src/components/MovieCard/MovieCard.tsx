@@ -1,3 +1,4 @@
+import React from 'react';
 import type { Movie } from '../../types/movie';
 import useMovieStore from '../../store/use-movie-store';
 import './MovieCard.css';
@@ -6,7 +7,7 @@ interface MovieCardProps {
     movie: Movie;
 }
 
-export default function MovieCard({ movie }: MovieCardProps) {
+const MovieCard = React.memo(function MovieCard({ movie }: MovieCardProps) {
     const { openModal } = useMovieStore();
 
     const handleCardClick = () => {
@@ -43,4 +44,6 @@ export default function MovieCard({ movie }: MovieCardProps) {
             </div>
         </article>
     );
-}
+});
+
+export default MovieCard;

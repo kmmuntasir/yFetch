@@ -2,6 +2,8 @@ import useMovieStore from '../../store/use-movie-store';
 import type { Movie } from '../../store/use-movie-store';
 import MovieCard from '../MovieCard/MovieCard';
 import SkeletonCard from '../SkeletonCard/SkeletonCard';
+import EmptyState from '../EmptyState/EmptyState';
+import ErrorState from '../ErrorState/ErrorState';
 import './MovieGrid.css';
 
 interface MovieGridProps {
@@ -9,7 +11,7 @@ interface MovieGridProps {
 }
 
 export default function MovieGrid({ movies }: MovieGridProps) {
-    const { isLoading, movieCount, query, genre, limit } = useMovieStore();
+    const { isLoading, error, movieCount, query, genre, limit } = useMovieStore();
 
     const getSectionHeading = () => {
         if (query) return `Search Results for "${query}"`;
@@ -17,12 +19,12 @@ export default function MovieGrid({ movies }: MovieGridProps) {
         return 'Recently Added';
     };
 
-    if (movies.length === 0 && !isLoading) {
-        return (
-            <div className="movie-grid-empty">
-                <p>No movies found.</p>
-            </div>
-        );
+    if (error) {
+        return <ErrorState />;
+    }
+
+    if (movies.length === 0 && !isLoading && !error) {
+        return <EmptyState />;
     }
 
     return (
@@ -30,7 +32,9 @@ export default function MovieGrid({ movies }: MovieGridProps) {
             <div className="movie-grid-header">
                 <h2 className="movie-grid-title">{getSectionHeading()}</h2>
                 {!isLoading && (
-                    <p className="movie-grid-count">{movieCount.toLocaleString()} movies found</p>
+                    <p className="movie-grid-count" aria-live="polite">
+                        {movieCount.toLocaleString()} movies found
+                    </p>
                 )}
             </div>
 

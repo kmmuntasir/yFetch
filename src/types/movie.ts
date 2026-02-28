@@ -53,6 +53,7 @@ export interface FetchMoviesParams {
     sort_by?: string;
     order_by?: string;
     with_rt_ratings?: boolean;
+    signal?: AbortSignal;
 }
 
 export interface FetchMoviesResponse {
