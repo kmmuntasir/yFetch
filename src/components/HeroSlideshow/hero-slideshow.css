@@ -1,0 +1,224 @@
+.hero {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    min-height: 600px;
+    max-height: 900px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+}
+
+/* ── Backdrop crossfade ── */
+.hero__backdrop {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center top;
+    opacity: 0;
+    transition: opacity 900ms ease;
+    will-change: opacity;
+}
+
+.hero__backdrop--active {
+    opacity: 1;
+}
+
+/* ── Gradient overlay — dark-to-bottom as per Figma ── */
+.hero__gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg,
+            #0F0F0F 0%,
+            rgba(15, 15, 15, 0.5) 50%,
+            rgba(0, 0, 0, 0.55) 100%);
+    pointer-events: none;
+}
+
+/* ── Content row ── */
+.hero__content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 1216px;
+    margin: 0 auto;
+    padding: 0 32px 80px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+}
+
+/* ── Glassmorphism info card ── */
+.hero__card {
+    flex: 1;
+    max-width: 640px;
+    background: rgba(26, 26, 26, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Meta row ── */
+.hero__meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.hero__genre-badge {
+    background: var(--accent-primary);
+    color: #000;
+    font-size: var(--font-size-caption);
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.02em;
+}
+
+.hero__year,
+.hero__rating {
+    font-size: var(--font-size-body-sm);
+    color: var(--text-secondary);
+}
+
+/* ── Title ── */
+.hero__title {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ── Synopsis ── */
+.hero__synopsis {
+    font-size: var(--font-size-body);
+    color: #D1D5DB;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+/* ── CTA buttons ── */
+.hero__actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.hero__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 9999px;
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    font-family: var(--font-family);
+    border: none;
+    cursor: pointer;
+    transition: var(--transition-base);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.hero__btn--primary {
+    background: var(--accent-primary);
+    color: #000;
+}
+
+.hero__btn--primary:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+.hero__btn--ghost {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(4px);
+}
+
+.hero__btn--ghost:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+/* ── Poster ── */
+.hero__poster-wrap {
+    flex-shrink: 0;
+}
+
+.hero__poster {
+    width: 180px;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Slide dots ── */
+.hero__dots {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.hero__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    border: none;
+    background: rgba(255, 255, 255, 0.35);
+    cursor: pointer;
+    padding: 0;
+    transition: var(--transition-base);
+}
+
+.hero__dot--active {
+    width: 24px;
+    background: var(--accent-primary);
+}
+
+/* ── Responsive ── */
+@media (max-width: 767px) {
+    .hero {
+        max-height: 100vh;
+        align-items: flex-end;
+    }
+
+    .hero__content {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0 16px 64px;
+        gap: 16px;
+    }
+
+    .hero__poster-wrap {
+        display: none;
+    }
+
+    .hero__card {
+        max-width: 100%;
+        padding: 20px;
+    }
+
+    .hero__title {
+        font-size: 1.75rem;
+    }
+}
