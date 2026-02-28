@@ -1,0 +1,42 @@
+---
+trigger: model_decision
+description: Ruleset that MUST be followed when executing ANY git command
+---
+
+# Git Guidelines
+
+## Sacred Rule:
+- NEVER run a `git` command without user's explicit approval.
+
+## Merge Policy:
+- **Rebase and Merge ONLY** — This repository uses "Rebase and Merge" policy
+- **No merge commits** — Never use `git merge`
+- **No squash merging** — Never use `--squash` flag
+- **No local branch merging** — Do not merge branches locally; all merging happens via PR rebase on GitHub
+
+## Project Slug:
+- PROJECTSLUG is a shortened name for the project to be used as an abbreviation for several things, example: JIRA tickets.
+- PROJECTSLUG for this project is: **ICON**
+- Can be found in the `./project-metadata.md` file.
+
+## Branch Naming:
+- Format: type/PROJECTSLUG-TICKET_NUMBER-hyphenated-short-description
+- Example: `feature/ICON-123-add-location-search`, `bugfix/ICON-234-fix-permission-crash`
+- Exception: Release branches should be named like this: `release/1.2.3`, no description or ticket number, just the version number.
+- Use imperative, hyphenated style for description.
+- Never assume ticket number. If missing, omit it.
+- Note: If the project uses Trello, then Card Number should be used in place of Ticket number.
+
+## Commit Messages:
+- ALWAYS use single line commit message
+- Format: PROJECTSLUG-TICKET_NUMBER: message
+- Example: `ICON-123: Add location permission handling`
+- Extract ticket number from branch name
+- If ticket is not identifiable, omit prefix and write message only.
+## Example .gitignore Entries
+
+If any of the above are missing from `.gitignore`, add them. Never commit sensitive build artifacts.
+
+## Release Workflow
+
+For release branches and tagging, follow the mobile release workflow in `.agent/workflows/mobile-release.md`.
