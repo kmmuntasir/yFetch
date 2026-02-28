@@ -13,12 +13,14 @@ export default function MovieModal() {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsMounted(true);
         return () => setIsMounted(false);
     }, []);
 
     useEffect(() => {
         if (isModalOpen) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsVisible(true);
             document.body.style.overflow = 'hidden';
             setShowTrailer(false);

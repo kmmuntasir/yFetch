@@ -1,0 +1,65 @@
+.pagination-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin: 40px 0 60px 0;
+    width: 100%;
+}
+
+.pagination-info {
+    color: #888888;
+    font-size: 0.8125rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    min-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1A1A1A;
+    border: none;
+    color: #888888;
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0 8px;
+    /* For numbers it will be essentially 36x36, for words it extends */
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #2A2A2A;
+    color: #E8E8E8;
+}
+
+.pagination-btn.active {
+    background-color: #6AC045;
+    color: #0F0F0F;
+    font-weight: 700;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.pagination-btn.ellipsis {
+    background-color: transparent;
+    cursor: default;
+}
+
+.pagination-prev-next {
+    padding: 0 12px;
+}
