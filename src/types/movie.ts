@@ -84,8 +84,11 @@ export interface MovieState {
     isLoading: boolean;
     error: string | null;
     selectedMovie: Movie | null;
+    isModalOpen: boolean;
 
     setSelectedMovie: (movie: Movie | null) => void;
+    openModal: (movie: Movie) => void;
+    closeModal: () => void;
     setQuery: (query: string) => void;
     setFilters: (filters: FilterParams) => void;
     setPage: (page: number) => void;

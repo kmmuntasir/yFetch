@@ -7,10 +7,10 @@ interface MovieCardProps {
 }
 
 export default function MovieCard({ movie }: MovieCardProps) {
-    const { setSelectedMovie } = useMovieStore();
+    const { openModal } = useMovieStore();
 
     const handleCardClick = () => {
-        setSelectedMovie(movie);
+        openModal(movie);
     };
 
     return (

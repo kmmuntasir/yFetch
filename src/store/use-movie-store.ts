@@ -17,12 +17,15 @@ const INITIAL_STATE = {
     isLoading: false,
     error: null as string | null,
     selectedMovie: null as Movie | null,
+    isModalOpen: false,
 };
 
 const useMovieStore = create<MovieState>((set, get) => ({
     ...INITIAL_STATE,
 
-    setSelectedMovie: (movie: Movie | null) => set({ selectedMovie: movie }),
+    setSelectedMovie: (movie: Movie | null) => set({ selectedMovie: movie, isModalOpen: !!movie }),
+    openModal: (movie: Movie) => set({ selectedMovie: movie, isModalOpen: true }),
+    closeModal: () => set({ isModalOpen: false, selectedMovie: null }),
 
     setQuery: (query: string) => set({ query, page: 1 }),
 

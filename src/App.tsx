@@ -4,6 +4,7 @@ import useMovieStore from './store/use-movie-store';
 import HeroSlideshow from './components/HeroSlideshow/HeroSlideshow';
 import Header from './components/Header/Header';
 import MovieGrid from './components/MovieGrid/MovieGrid';
+import MovieModal from './components/MovieModal/MovieModal';
 
 function HomePage() {
   const { movies, isLoading, error, fetchMovies } =
@@ -48,6 +49,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
       </Routes>
+      <MovieModal />
     </>
   );
 }
