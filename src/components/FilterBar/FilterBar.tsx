@@ -21,7 +21,7 @@ const FilterBar: React.FC = () => {
 
     const hasActiveFilters = quality !== '' || genre !== '' || minRating > 0 || sortBy !== 'date_added' || orderBy !== 'desc';
 
-    const currentSortOption = SORT_OPTIONS.find(opt => opt.sortBy === sortBy && opt.orderBy === orderBy)?.value || 'latest-added';
+    const currentSortOption = SORT_OPTIONS.find(opt => opt.value === sortBy)?.value || 'date_added';
 
     const handleFilterChange = (key: keyof import('../../types/movie').FilterParams, value: string | number) => {
         setFilters({
@@ -35,10 +35,11 @@ const FilterBar: React.FC = () => {
     };
 
     const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const option = SORT_OPTIONS.find(opt => opt.value === e.target.value);
-        if (option) {
-            setFilters({ quality, genre, minRating, sortBy: option.sortBy, orderBy: option.orderBy });
-        }
+        setFilters({ quality, genre, minRating, sortBy: e.target.value, orderBy });
+    };
+
+    const toggleOrder = () => {
+        setFilters({ quality, genre, minRating, sortBy, orderBy: orderBy === 'desc' ? 'asc' : 'desc' });
     };
 
     return (
@@ -89,15 +90,36 @@ const FilterBar: React.FC = () => {
 
                 <div className="filter-group">
                     <label htmlFor="sort-filter" className="sr-only">Sort By</label>
-                    <select
-                        id="sort-filter"
-                        value={currentSortOption}
-                        onChange={handleSortChange}
-                        className="filter-select"
-                        aria-label="Sort movies by"
-                    >
-                        {SORT_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                    </select>
+                    <div className="filter-sort-controls">
+                        <select
+                            id="sort-filter"
+                            value={currentSortOption}
+                            onChange={handleSortChange}
+                            className="filter-select"
+                            aria-label="Sort movies by"
+                            style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRight: 'none' }}
+                        >
+                            {SORT_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                        </select>
+                        <button
+                            className="filter-order-toggle"
+                            onClick={toggleOrder}
+                            aria-label={`Toggle sort order. Current: ${orderBy}`}
+                            title={orderBy === 'desc' ? 'Descending' : 'Ascending'}
+                        >
+                            {orderBy === 'desc' ? (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <polyline points="19 12 12 19 5 12"></polyline>
+                                </svg>
+                            ) : (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="12" y1="19" x2="12" y2="5"></line>
+                                    <polyline points="5 12 12 5 19 12"></polyline>
+                                </svg>
+                            )}
+                        </button>
+                    </div>
                 </div>
 
                 {hasActiveFilters && (

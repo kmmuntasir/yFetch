@@ -249,3 +249,36 @@
         display: none;
     }
 }
+/* Sort Order Toggle */
+.filter-sort-controls {
+    display: flex;
+    align-items: stretch;
+}
+
+.filter-order-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1A1A1A;
+    border: 1px solid #333333;
+    border-left: 1px solid #4A4A4A;
+    color: #888888;
+    padding: 0 12px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-order-toggle:hover {
+    color: #E8E8E8;
+    background-color: #2A2A2A;
+}
+
+.filter-order-toggle:focus {
+    outline: none;
+    border-color: #6AC045;
+    color: #6AC045;
+    position: relative;
+    z-index: 2;
+}

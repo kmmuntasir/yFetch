@@ -25,7 +25,8 @@ const MobileFilterOverlay: React.FC<MobileFilterOverlayProps> = ({
     const [localQuality, setLocalQuality] = useState(quality || 'All');
     const [localGenre, setLocalGenre] = useState(genre || 'All');
     const [localMinRating, setLocalMinRating] = useState(minRating);
-    const [localSortVal, setLocalSortVal] = useState('');
+    const [localSortBy, setLocalSortBy] = useState(sortBy);
+    const [localOrderBy, setLocalOrderBy] = useState(orderBy);
 
     useEffect(() => {
         if (isOpen) {
@@ -40,7 +41,9 @@ const MobileFilterOverlay: React.FC<MobileFilterOverlayProps> = ({
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setLocalMinRating(minRating);
             // eslint-disable-next-line react-hooks/set-state-in-effect
-            setLocalSortVal(sortOptions.find(opt => opt.sortBy === sortBy && opt.orderBy === orderBy)?.value || 'latest-added');
+            setLocalSortBy(sortOptions.find(opt => opt.value === sortBy)?.value || 'date_added');
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setLocalOrderBy(orderBy);
         } else {
             document.body.style.overflow = '';
         }
@@ -53,13 +56,12 @@ const MobileFilterOverlay: React.FC<MobileFilterOverlayProps> = ({
     if (!isOpen) return null;
 
     const handleApply = () => {
-        const option = sortOptions.find(opt => opt.value === localSortVal);
         setFilters({
             quality: localQuality === 'All' ? '' : localQuality,
             genre: localGenre === 'All' ? '' : localGenre,
             minRating: localMinRating,
-            sortBy: option?.sortBy || 'date_added',
-            orderBy: option?.orderBy || 'desc'
+            sortBy: localSortBy,
+            orderBy: localOrderBy
         });
         onClose();
     };
@@ -124,14 +126,35 @@ const MobileFilterOverlay: React.FC<MobileFilterOverlayProps> = ({
 
                 <div className="mobile-filter-group">
                     <label htmlFor="mobile-sort">Sort By</label>
-                    <select
-                        id="mobile-sort"
-                        value={localSortVal}
-                        onChange={(e) => setLocalSortVal(e.target.value)}
-                        className="filter-select"
-                    >
-                        {sortOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                    </select>
+                    <div className="filter-sort-controls">
+                        <select
+                            id="mobile-sort"
+                            value={localSortBy}
+                            onChange={(e) => setLocalSortBy(e.target.value)}
+                            className="filter-select"
+                            style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRight: 'none', flex: 1 }}
+                        >
+                            {sortOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                        </select>
+                        <button
+                            className="filter-order-toggle"
+                            onClick={() => setLocalOrderBy(prev => prev === 'desc' ? 'asc' : 'desc')}
+                            aria-label={`Toggle sort order. Current: ${localOrderBy}`}
+                            title={localOrderBy === 'desc' ? 'Descending' : 'Ascending'}
+                        >
+                            {localOrderBy === 'desc' ? (
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <polyline points="19 12 12 19 5 12"></polyline>
+                                </svg>
+                            ) : (
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="12" y1="19" x2="12" y2="5"></line>
+                                    <polyline points="5 12 12 5 19 12"></polyline>
+                                </svg>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
 
