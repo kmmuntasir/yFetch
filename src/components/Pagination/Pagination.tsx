@@ -12,10 +12,6 @@ const Pagination: React.FC = () => {
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setPage(newPage);
-            // We use setTimeout to allow state to settle before fetch
-            setTimeout(() => {
-                fetchMovies();
-            }, 0);
             // Scroll to top of grid
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }

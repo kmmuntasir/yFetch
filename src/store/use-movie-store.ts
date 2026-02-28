@@ -27,17 +27,25 @@ const useMovieStore = create<MovieState>((set, get) => ({
     openModal: (movie: Movie) => set({ selectedMovie: movie, isModalOpen: true }),
     closeModal: () => set({ isModalOpen: false, selectedMovie: null }),
 
-    setQuery: (query: string) => set({ query, page: 1 }),
+    setQuery: (query: string) => {
+        set({ query, page: 1 });
+        get().fetchMovies();
+    },
 
-    setFilters: (filters: FilterParams) =>
+    setFilters: (filters: FilterParams) => {
         set({
             ...filters,
             page: 1,
-        }),
+        });
+        get().fetchMovies();
+    },
 
-    setPage: (page: number) => set({ page }),
+    setPage: (page: number) => {
+        set({ page });
+        get().fetchMovies();
+    },
 
-    resetFilters: () =>
+    resetFilters: () => {
         set({
             query: '',
             quality: '',
@@ -46,7 +54,9 @@ const useMovieStore = create<MovieState>((set, get) => ({
             sortBy: 'date_added',
             orderBy: 'desc',
             page: 1,
-        }),
+        });
+        get().fetchMovies();
+    },
 
     fetchMovies: async () => {
         const { query, quality, genre, minRating, sortBy, orderBy, page, limit } =
