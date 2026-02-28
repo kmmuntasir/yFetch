@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YTS POC — API Feature Test</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: sans-serif;
+            background: #111;
+            color: #ddd;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #6AC045;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #aaa;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 6px;
+            margin-bottom: 12px;
+            margin-top: 24px;
+        }
+
+        /* ── Autocomplete ── */
+        #autocomplete-wrap {
+            position: relative;
+            max-width: 500px;
+        }
+
+        #autocomplete-input {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 16px;
+            background: #222;
+            color: #eee;
+            border: 1px solid #444;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        #autocomplete-input:focus {
+            border-color: #6AC045;
+        }
+
+        #suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #222;
+            border: 1px solid #444;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            z-index: 100;
+            display: none;
+        }
+
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .suggestion-item:hover {
+            background: #333;
+        }
+
+        .suggestion-item img {
+            width: 36px;
+            height: 54px;
+            object-fit: cover;
+            border-radius: 3px;
+        }
+
+        .suggestion-item .sug-info {
+            font-size: 14px;
+        }
+
+        .suggestion-item .sug-year {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .sug-adv {
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 13px;
+            color: #6AC045;
+            cursor: pointer;
+            border-top: 1px solid #333;
+        }
+
+        .sug-adv:hover {
+            background: #1a1a1a;
+        }
+
+        /* ── Detailed search form ── */
+        #search-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        #search-form input[type="text"],
+        #search-form select {
+            padding: 8px 10px;
+            background: #222;
+            color: #eee;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        #search-form input[type="text"] {
+            width: 220px;
+        }
+
+        #search-form label {
+            font-size: 12px;
+            color: #888;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        #search-form .field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #search-form button {
+            padding: 9px 22px;
+            background: #6AC045;
+            color: #111;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #search-form button:hover {
+            background: #5aaa35;
+        }
+
+        /* ── Status / error ── */
+        #status {
+            margin-top: 16px;
+            font-size: 13px;
+            color: #888;
+            min-height: 20px;
+        }
+
+        /* ── Results ── */
+        #results {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .movie-card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+        }
+
+        .movie-poster {
+            flex-shrink: 0;
+        }
+
+        .movie-poster img {
+            width: 120px;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .movie-meta {
+            flex: 1;
+        }
+
+        .movie-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .movie-title a {
+            color: #6AC045;
+            text-decoration: none;
+        }
+
+        .movie-title a:hover {
+            text-decoration: underline;
+        }
+
+        .movie-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0;
+        }
+
+        .badge {
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .badge-year {
+            background: #333;
+            color: #aaa;
+        }
+
+        .badge-rating {
+            background: #2a4a1a;
+            color: #6AC045;
+        }
+
+        .badge-genre {
+            background: #1e1e3a;
+            color: #7a8fff;
+        }
+
+        .badge-lang {
+            background: #3a2a1a;
+            color: #ffa850;
+        }
+
+        .badge-runtime {
+            background: #2a2a2a;
+            color: #aaa;
+        }
+
+        .badge-mpa {
+            background: #3a2a2a;
+            color: #ff7070;
+        }
+
+        .movie-synopsis {
+            font-size: 13px;
+            color: #aaa;
+            margin: 8px 0;
+            line-height: 1.5;
+            max-height: 80px;
+            overflow: hidden;
+        }
+
+        .movie-synopsis.expanded {
+            max-height: none;
+        }
+
+        .toggle-synopsis {
+            font-size: 12px;
+            color: #6AC045;
+            cursor: pointer;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        /* ── Torrents ── */
+        .torrents-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .torrent-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: #111;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .torrent-quality {
+            font-weight: bold;
+            font-size: 14px;
+            color: #6AC045;
+            min-width: 80px;
+        }
+
+        .torrent-info {
+            font-size: 12px;
+            color: #888;
+            flex: 1;
+        }
+
+        .torrent-seeds {
+            font-size: 12px;
+            color: #5a9;
+        }
+
+        .torrent-peers {
+            font-size: 12px;
+            color: #99a;
+        }
+
+        .btn-dl {
+            padding: 5px 12px;
+            background: #1a3a10;
+            color: #6AC045;
+            border: 1px solid #6AC045;
+            border-radius: 4px;
+            font-size: 12px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-dl:hover {
+            background: #6AC045;
+            color: #111;
+        }
+
+        .btn-magnet {
+            padding: 5px 12px;
+            background: #2a1a3a;
+            color: #b080ff;
+            border: 1px solid #7050bb;
+            border-radius: 4px;
+            font-size: 12px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-magnet:hover {
+            background: #7050bb;
+            color: #fff;
+        }
+
+        /* ── Pagination ── */
+        #pagination {
+            margin-top: 20px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        #pagination button {
+            padding: 6px 12px;
+            background: #222;
+            color: #ddd;
+            border: 1px solid #444;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        #pagination button:hover {
+            background: #333;
+        }
+
+        #pagination button.active {
+            background: #6AC045;
+            color: #111;
+            border-color: #6AC045;
+            font-weight: bold;
+        }
+
+        #pagination button:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        #page-info {
+            font-size: 13px;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🎬 YTS POC — API Feature Test</h1>
+
+    <!-- ══════════════════════════════════════
+     SECTION 1 — Autocomplete Search
+══════════════════════════════════════ -->
+    <h2>1 · Quick Search (Autocomplete)</h2>
+    <div id="autocomplete-wrap">
+        <input id="autocomplete-input" type="text" placeholder="Start typing a movie title…" autocomplete="off" />
+        <div id="suggestions"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+     SECTION 2 — Detailed Search Form
+══════════════════════════════════════ -->
+    <h2>2 · Detailed Search</h2>
+    <form id="search-form">
+        <div class="field">
+            <label>Keyword</label>
+            <input type="text" id="f-query" placeholder="e.g. inception" />
+        </div>
+
+        <div class="field">
+            <label>Quality</label>
+            <select id="f-quality">
+                <option value="">All</option>
+                <option value="720p">720p</option>
+                <option value="1080p">1080p</option>
+                <option value="1080p.x265">1080p x265</option>
+                <option value="2160p">4K (2160p)</option>
+                <option value="3D">3D</option>
+                <option value="480p">480p</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>Genre</label>
+            <select id="f-genre">
+                <option value="">All</option>
+                <option>Action</option>
+                <option>Adventure</option>
+                <option>Animation</option>
+                <option>Biography</option>
+                <option>Comedy</option>
+                <option>Crime</option>
+                <option>Documentary</option>
+                <option>Drama</option>
+                <option>Family</option>
+                <option>Fantasy</option>
+                <option>History</option>
+                <option>Horror</option>
+                <option>Music</option>
+                <option>Musical</option>
+                <option>Mystery</option>
+                <option>Romance</option>
+                <option>Sci-Fi</option>
+                <option>Sport</option>
+                <option>Thriller</option>
+                <option>War</option>
+                <option>Western</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>Min Rating</label>
+            <select id="f-rating">
+                <option value="0">All</option>
+                <option value="5">5+</option>
+                <option value="6">6+</option>
+                <option value="7">7+</option>
+                <option value="8">8+</option>
+                <option value="9">9+</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>Sort By</label>
+            <select id="f-sort">
+                <option value="date_added">Latest</option>
+                <option value="year">Year</option>
+                <option value="rating">Rating</option>
+                <option value="peers">Peers</option>
+                <option value="seeds">Seeds</option>
+                <option value="download_count">Downloads</option>
+                <option value="like_count">Likes</option>
+                <option value="title">Title (A-Z)</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>Order</label>
+            <select id="f-order">
+                <option value="desc">Desc ↓</option>
+                <option value="asc">Asc ↑</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>Per Page</label>
+            <select id="f-limit">
+                <option value="10">10</option>
+                <option value="20" selected>20</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+
+        <button type="submit">Search</button>
+    </form>
+
+    <!-- ══════════════════════════════════════
+     Status + Results + Pagination
+══════════════════════════════════════ -->
+    <div id="status"></div>
+    <div id="results"></div>
+    <div id="pagination"></div>
+
+    <script>
+        /* ── Constants ── */
+        const API = 'https://movies-api.accel.li/api/v2/list_movies.json';
+        const TRACKERS = [
+            'udp://open.demonii.com:1337/announce',
+            'udp://tracker.openbittorrent.com:80',
+            'udp://tracker.coppersurfer.tk:6969',
+            'udp://glotorrents.pw:6969/announce',
+            'udp://tracker.opentrackr.org:1337/announce',
+            'udp://torrent.gresille.org:80/announce',
+            'udp://p4p.arenabg.com:1337',
+            'udp://tracker.leechers-paradise.org:6969',
+        ];
+
+        /* ── State ── */
+        let currentPage = 1;
+        let currentParams = {};
+        let totalMovies = 0;
+        let currentLimit = 20;
+
+        /* ── Helpers ── */
+        function buildMagnet(hash, title) {
+            const p = new URLSearchParams({ xt: `urn:btih:${hash}`, dn: title });
+            TRACKERS.forEach(t => p.append('tr', t));
+            return `magnet:?${p.toString()}`;
+        }
+
+        function setStatus(msg) {
+            document.getElementById('status').textContent = msg;
+        }
+
+        function runtimeFmt(mins) {
+            if (!mins) return '';
+            return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+        }
+
+        /* ── Render a single movie card ── */
+        function renderMovie(m) {
+            const torrentsHtml = (m.torrents || []).map(t => {
+                const magnet = buildMagnet(t.hash, m.title_long || m.title);
+                return `
+        <div class="torrent-row">
+          <span class="torrent-quality">${t.quality} <span style="font-size:11px;color:#666;font-weight:normal">${t.type}</span></span>
+          <span class="torrent-info">${t.video_codec || ''} · ${t.bit_depth || ''}bit · ${t.audio_channels || ''} · ${t.size}</span>
+          <span class="torrent-seeds">🌱 ${t.seeds}</span>
+          <span class="torrent-peers">👥 ${t.peers}</span>
+          <a class="btn-dl" href="${t.url}" download>⬇ .torrent</a>
+          <a class="btn-magnet" href="${magnet}">🧲 Magnet</a>
+        </div>`;
+            }).join('');
+
+            const genres = (m.genres || []).map(g => `<span class="badge badge-genre">${g}</span>`).join('');
+            const imdbUrl = m.imdb_code ? `https://www.imdb.com/title/${m.imdb_code}` : '#';
+            const trailerUrl = m.yt_trailer_code ? `https://www.youtube.com/watch?v=${m.yt_trailer_code}` : null;
+            const synopsis = m.summary || m.synopsis || m.description_full || 'No synopsis available.';
+
+            return `
+      <div class="movie-card">
+        <div class="movie-poster">
+          <img src="${m.medium_cover_image || m.small_cover_image}" alt="${m.title}" loading="lazy" />
+        </div>
+        <div class="movie-meta">
+          <div class="movie-title">
+            <a href="${imdbUrl}" target="_blank">${m.title}</a>
+          </div>
+          <div class="movie-badges">
+            ${m.year ? `<span class="badge badge-year">${m.year}</span>` : ''}
+            ${m.rating ? `<span class="badge badge-rating">⭐ ${m.rating}</span>` : ''}
+            ${m.runtime ? `<span class="badge badge-runtime">🕐 ${runtimeFmt(m.runtime)}</span>` : ''}
+            ${m.mpa_rating ? `<span class="badge badge-mpa">${m.mpa_rating}</span>` : ''}
+            ${m.language ? `<span class="badge badge-lang">🌐 ${m.language.toUpperCase()}</span>` : ''}
+            ${genres}
+          </div>
+          <div class="movie-synopsis" id="synopsis-${m.id}">${synopsis}</div>
+          <span class="toggle-synopsis" onclick="toggleSynopsis(${m.id})">▼ Show more</span>
+          ${trailerUrl ? `<a href="${trailerUrl}" target="_blank" style="font-size:13px;color:#ff5050;margin-right:12px;">▶ Trailer</a>` : ''}
+          <div class="torrents-label" style="margin-top:10px">Available torrents</div>
+          ${torrentsHtml || '<div style="font-size:13px;color:#666">No torrents found for this movie.</div>'}
+        </div>
+      </div>`;
+        }
+
+        function toggleSynopsis(id) {
+            const el = document.getElementById(`synopsis-${id}`);
+            const btn = el.nextElementSibling;
+            el.classList.toggle('expanded');
+            btn.textContent = el.classList.contains('expanded') ? '▲ Show less' : '▼ Show more';
+        }
+
+        /* ── Pagination ── */
+        function renderPagination(movieCount, limit, page) {
+            const total = Math.ceil(movieCount / limit);
+            const pgDiv = document.getElementById('pagination');
+            if (total <= 1) { pgDiv.innerHTML = ''; return; }
+
+            let html = `<span id="page-info">Page ${page} of ${total} (${movieCount} movies)</span>`;
+
+            html += `<button ${page <= 1 ? 'disabled' : ''} onclick="gotoPage(${page - 1})">← Prev</button>`;
+
+            // Show up to 9 page buttons with ellipsis
+            const range = [];
+            for (let i = 1; i <= total; i++) {
+                if (i === 1 || i === total || (i >= page - 3 && i <= page + 3)) {
+                    range.push(i);
+                }
+            }
+            let prev = 0;
+            for (const p of range) {
+                if (p - prev > 1) html += `<button disabled>…</button>`;
+                html += `<button class="${p === page ? 'active' : ''}" onclick="gotoPage(${p})">${p}</button>`;
+                prev = p;
+            }
+
+            html += `<button ${page >= total ? 'disabled' : ''} onclick="gotoPage(${page + 1})">Next →</button>`;
+            pgDiv.innerHTML = html;
+        }
+
+        function gotoPage(n) {
+            currentPage = n;
+            fetchMovies({ ...currentParams, page: n, limit: currentLimit });
+        }
+
+        /* ── Core fetch function ── */
+        async function fetchMovies(params) {
+            setStatus('⏳ Fetching…');
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('pagination').innerHTML = '';
+
+            const url = new URL(API);
+            Object.entries(params).forEach(([k, v]) => {
+                if (v !== '' && v !== null && v !== undefined) url.searchParams.set(k, v);
+            });
+            url.searchParams.set('with_rt_ratings', 'true');
+
+            console.log('[POC] Fetching:', url.toString());
+
+            try {
+                const res = await fetch(url.toString());
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const json = await res.json();
+
+                const data = json.data;
+                if (!data || !data.movies || data.movies.length === 0) {
+                    setStatus('No movies found. Try different filters.');
+                    return;
+                }
+
+                totalMovies = data.movie_count;
+                currentLimit = params.limit || 20;
+                setStatus(`✅ ${data.movie_count} movies found — showing page ${data.page_number}`);
+
+                document.getElementById('results').innerHTML = data.movies.map(renderMovie).join('');
+                renderPagination(data.movie_count, currentLimit, data.page_number);
+            } catch (err) {
+                setStatus(`❌ Error: ${err.message}`);
+                console.error(err);
+            }
+        }
+
+        /* ── Detailed search form handler ── */
+        document.getElementById('search-form').addEventListener('submit', e => {
+            e.preventDefault();
+            currentPage = 1;
+            currentParams = {
+                query_term: document.getElementById('f-query').value.trim(),
+                quality: document.getElementById('f-quality').value,
+                genre: document.getElementById('f-genre').value,
+                minimum_rating: document.getElementById('f-rating').value,
+                sort_by: document.getElementById('f-sort').value,
+                order_by: document.getElementById('f-order').value,
+                limit: parseInt(document.getElementById('f-limit').value),
+                page: 1,
+            };
+            currentLimit = currentParams.limit;
+            fetchMovies(currentParams);
+        });
+
+        /* ── Autocomplete ── */
+        const acInput = document.getElementById('autocomplete-input');
+        const sugDiv = document.getElementById('suggestions');
+        let acTimer = null;
+        let acMovies = [];   // store full movie objects for quick open
+
+        acInput.addEventListener('input', () => {
+            clearTimeout(acTimer);
+            const q = acInput.value.trim();
+            if (q.length < 2) { sugDiv.style.display = 'none'; return; }
+            acTimer = setTimeout(() => fetchAutocomplete(q), 350);
+        });
+
+        acInput.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { sugDiv.style.display = 'none'; }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sugDiv.style.display = 'none';
+                const q = acInput.value.trim();
+                if (!q) return;
+                currentPage = 1;
+                currentParams = { query_term: q, sort_by: 'date_added', order_by: 'desc', limit: 20, page: 1 };
+                currentLimit = 20;
+                fetchMovies(currentParams);
+            }
+        });
+
+        document.addEventListener('click', e => {
+            if (!document.getElementById('autocomplete-wrap').contains(e.target)) {
+                sugDiv.style.display = 'none';
+            }
+        });
+
+        async function fetchAutocomplete(q) {
+            const url = new URL(API);
+            url.searchParams.set('query_term', q);
+            url.searchParams.set('limit', '5');
+            url.searchParams.set('sort_by', 'date_added');
+            url.searchParams.set('order_by', 'desc');
+
+            try {
+                const res = await fetch(url.toString());
+                const json = await res.json();
+                acMovies = (json.data && json.data.movies) || [];
+                renderSuggestions(acMovies, q);
+            } catch {
+                sugDiv.style.display = 'none';
+            }
+        }
+
+        function renderSuggestions(movies, q) {
+            if (movies.length === 0) { sugDiv.style.display = 'none'; return; }
+            sugDiv.innerHTML = movies.map((m, i) => `
+      <div class="suggestion-item" onclick="selectSuggestion(${i})">
+        <img src="${m.small_cover_image}" alt="${m.title}" />
+        <div class="sug-info">
+          ${m.title}
+          <div class="sug-year">${m.year}${m.rating ? ` · ⭐ ${m.rating}` : ''}</div>
+        </div>
+      </div>
+    `).join('') + `<div class="sug-adv" onclick="searchAll('${q.replace(/'/g, "\\'")}')">🔍 Show all results for "${q}"</div>`;
+            sugDiv.style.display = 'block';
+        }
+
+        function selectSuggestion(idx) {
+            const m = acMovies[idx];
+            if (!m) return;
+            sugDiv.style.display = 'none';
+            acInput.value = m.title;
+            // Show this single movie in results
+            setStatus(`✅ Showing: ${m.title_long || m.title}`);
+            document.getElementById('results').innerHTML = renderMovie(m);
+            document.getElementById('pagination').innerHTML = '';
+        }
+
+        function searchAll(q) {
+            sugDiv.style.display = 'none';
+            acInput.value = q;
+            currentPage = 1;
+            currentParams = { query_term: q, sort_by: 'date_added', order_by: 'desc', limit: 20, page: 1 };
+            currentLimit = 20;
+            fetchMovies(currentParams);
+        }
+    </script>
+</body>
+
+</html>
