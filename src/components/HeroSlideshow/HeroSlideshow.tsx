@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Movie } from '../../types/movie';
+import Header from '../Header/Header';
 import './hero-slideshow.css';
 
 interface Props {
@@ -51,6 +52,9 @@ export default function HeroSlideshow({ movies }: Props) {
 
             {/* Gradient overlay */}
             <div className="hero__gradient" aria-hidden="true" />
+
+            {/* Top nav — floats over hero, matches Figma */}
+            <Header />
 
             {/* Content */}
             <div className="hero__content">
