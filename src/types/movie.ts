@@ -83,7 +83,9 @@ export interface MovieState {
     movieCount: number;
     isLoading: boolean;
     error: string | null;
+    selectedMovie: Movie | null;
 
+    setSelectedMovie: (movie: Movie | null) => void;
     setQuery: (query: string) => void;
     setFilters: (filters: FilterParams) => void;
     setPage: (page: number) => void;

@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import useMovieStore from './store/use-movie-store';
 import { buildMagnetLink } from './services/api-client';
 import HeroSlideshow from './components/HeroSlideshow/HeroSlideshow';
+import Header from './components/Header/Header';
 
 function HomePage() {
   const { movies, movieCount, isLoading, error, fetchMovies } =
@@ -132,9 +133,12 @@ function HomePage() {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-    </Routes>
+    <>
+      <Header />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+      </Routes>
+    </>
   );
 }
 

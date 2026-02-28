@@ -1,15 +1,9 @@
 import './header.css';
+import SearchBar from '../SearchBar/SearchBar';
+import useMovieStore from '../../store/use-movie-store';
 
-interface Props {
-    onSearch?: (query: string) => void;
-}
-
-export default function Header({ onSearch }: Props) {
-    function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-        if (e.key === 'Enter') {
-            onSearch?.(e.currentTarget.value.trim());
-        }
-    }
+export default function Header() {
+    const { setSelectedMovie } = useMovieStore();
 
     return (
         <header className="site-header" role="banner">
@@ -22,32 +16,7 @@ export default function Header({ onSearch }: Props) {
 
                 {/* Search bar */}
                 <div className="site-header__search-wrap">
-                    <div className="site-header__search-pill">
-                        <svg
-                            className="site-header__search-icon"
-                            aria-hidden="true"
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <circle cx="11" cy="11" r="8" />
-                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                        </svg>
-                        <input
-                            id="header-search"
-                            className="site-header__search-input"
-                            type="text"
-                            placeholder="Search movies, genres, directors…"
-                            autoComplete="off"
-                            onKeyDown={handleKeyDown}
-                            aria-label="Search movies"
-                        />
-                    </div>
+                    <SearchBar onMovieSelect={(movie) => setSelectedMovie(movie)} />
                 </div>
 
                 {/* Right nav */}

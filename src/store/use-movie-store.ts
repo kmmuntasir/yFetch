@@ -16,10 +16,13 @@ const INITIAL_STATE = {
     movieCount: 0,
     isLoading: false,
     error: null as string | null,
+    selectedMovie: null as Movie | null,
 };
 
 const useMovieStore = create<MovieState>((set, get) => ({
     ...INITIAL_STATE,
+
+    setSelectedMovie: (movie: Movie | null) => set({ selectedMovie: movie }),
 
     setQuery: (query: string) => set({ query, page: 1 }),
 
