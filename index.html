@@ -4,348 +4,886 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YTS POC — API Feature Test</title>
+    <title>yFetch — Browse & Discover Movies</title>
+    <meta name="description" content="A clean, modern, ad-free movie browser. Search, filter, and discover high-quality movies with instant downloads.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
+        /* ── CSS Custom Properties (Design Tokens) ── */
+        :root {
+            --bg-body: #0F0F0F;
+            --bg-surface-1: #1A1A1A;
+            --bg-surface-2: #242424;
+            --bg-surface-hover: #2A2A2A;
+
+            --text-primary: #E8E8E8;
+            --text-secondary: #888888;
+            --text-disabled: #4A4A4A;
+
+            --accent-primary: #6AC045;
+            --accent-hover: #58A638;
+            --imdb-gold: #F5C518;
+            --error: #EF4444;
+
+            --shadow-1: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.5);
+            --shadow-3: 0 24px 48px rgba(0, 0, 0, 0.8);
+
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-pill: 24px;
+        }
+
+        /* ── Reset ── */
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
         body {
-            font-family: sans-serif;
-            background: #111;
-            color: #ddd;
-            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        h1 {
-            color: #6AC045;
-            margin-bottom: 20px;
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
 
-        h2 {
-            color: #aaa;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 6px;
-            margin-bottom: 12px;
-            margin-top: 24px;
+        ::-webkit-scrollbar-track {
+            background: var(--bg-body);
         }
 
-        /* ── Autocomplete ── */
-        #autocomplete-wrap {
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-surface-hover);
+            border-radius: var(--radius-sm);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-disabled);
+        }
+
+        /* ── Navbar ── */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 32px;
+            background: rgba(15, 15, 15, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--bg-surface-1);
+        }
+
+        .navbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .navbar-logo svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        /* ── Search Bar (Pill) ── */
+        .search-wrap {
             position: relative;
+            width: 100%;
             max-width: 500px;
         }
 
-        #autocomplete-input {
-            width: 100%;
-            padding: 10px 14px;
-            font-size: 16px;
-            background: #222;
-            color: #eee;
-            border: 1px solid #444;
-            border-radius: 6px;
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-surface-1);
+            border: 1px solid transparent;
+            border-radius: var(--radius-pill);
+            padding: 8px 20px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .search-bar:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(106, 192, 69, 0.15);
+        }
+
+        .search-bar svg {
+            width: 18px;
+            height: 18px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .search-bar input {
+            flex: 1;
+            background: none;
+            border: none;
             outline: none;
+            color: var(--text-primary);
+            font-size: 0.9375rem;
+            font-family: 'Inter', sans-serif;
         }
 
-        #autocomplete-input:focus {
-            border-color: #6AC045;
+        .search-bar input::placeholder {
+            color: var(--text-disabled);
         }
 
-        #suggestions {
+        /* ── Autocomplete Suggestions ── */
+        .suggestions {
             position: absolute;
-            top: 100%;
+            top: calc(100% + 6px);
             left: 0;
             right: 0;
-            background: #222;
-            border: 1px solid #444;
-            border-top: none;
-            border-radius: 0 0 6px 6px;
-            z-index: 100;
+            background: var(--bg-surface-2);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-3);
+            overflow: hidden;
             display: none;
+            z-index: 100;
+            animation: dropIn 0.2s ease;
+        }
+
+        @keyframes dropIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .suggestion-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
+            gap: 12px;
+            padding: 10px 16px;
             cursor: pointer;
+            transition: background 0.15s ease;
         }
 
         .suggestion-item:hover {
-            background: #333;
+            background: var(--bg-surface-hover);
         }
 
         .suggestion-item img {
             width: 36px;
             height: 54px;
             object-fit: cover;
-            border-radius: 3px;
+            border-radius: var(--radius-sm);
         }
 
         .suggestion-item .sug-info {
-            font-size: 14px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
         }
 
         .suggestion-item .sug-year {
-            font-size: 12px;
-            color: #888;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
         }
 
         .sug-adv {
-            padding: 8px 12px;
+            padding: 10px 16px;
             text-align: center;
-            font-size: 13px;
-            color: #6AC045;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--accent-primary);
             cursor: pointer;
-            border-top: 1px solid #333;
+            border-top: 1px solid var(--bg-surface-1);
+            transition: background 0.15s ease;
         }
 
         .sug-adv:hover {
-            background: #1a1a1a;
+            background: var(--bg-surface-hover);
         }
 
-        /* ── Detailed search form ── */
-        #search-form {
+        /* ── Nav Actions ── */
+        .nav-actions {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: flex-end;
-        }
-
-        #search-form input[type="text"],
-        #search-form select {
-            padding: 8px 10px;
-            background: #222;
-            color: #eee;
-            border: 1px solid #444;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        #search-form input[type="text"] {
-            width: 220px;
-        }
-
-        #search-form label {
-            font-size: 12px;
-            color: #888;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        #search-form .field {
-            display: flex;
-            flex-direction: column;
-        }
-
-        #search-form button {
-            padding: 9px 22px;
-            background: #6AC045;
-            color: #111;
-            font-weight: bold;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        #search-form button:hover {
-            background: #5aaa35;
-        }
-
-        /* ── Status / error ── */
-        #status {
-            margin-top: 16px;
-            font-size: 13px;
-            color: #888;
-            min-height: 20px;
-        }
-
-        /* ── Results ── */
-        #results {
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .movie-card {
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            border-radius: 8px;
-            padding: 16px;
-            display: flex;
-            gap: 16px;
-        }
-
-        .movie-poster {
+            align-items: center;
+            gap: 8px;
             flex-shrink: 0;
         }
 
-        .movie-poster img {
-            width: 120px;
-            border-radius: 4px;
-            display: block;
-        }
-
-        .movie-meta {
+        /* ── Main Container ── */
+        main {
             flex: 1;
+            padding: 0 32px 48px;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
         }
 
-        .movie-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #fff;
+        /* ── Section Headers ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 32px 0 20px;
         }
 
-        .movie-title a {
-            color: #6AC045;
-            text-decoration: none;
+        .section-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
-        .movie-title a:hover {
-            text-decoration: underline;
+        .section-header .result-count {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
         }
 
-        .movie-badges {
+        /* ── Filter Bar ── */
+        .filter-bar {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
-            margin: 8px 0;
+            gap: 12px;
+            align-items: flex-end;
+            padding: 16px 20px;
+            background: var(--bg-surface-1);
+            border-radius: var(--radius-md);
+            margin-bottom: 24px;
         }
 
-        .badge {
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 12px;
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
-        .badge-year {
-            background: #333;
-            color: #aaa;
+        .filter-field label {
+            font-size: 0.6875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .badge-rating {
-            background: #2a4a1a;
-            color: #6AC045;
+        .filter-field input[type="text"],
+        .filter-field select {
+            padding: 8px 12px;
+            background: var(--bg-surface-2);
+            color: var(--text-primary);
+            border: 1px solid #333;
+            border-radius: var(--radius-sm);
+            font-size: 0.8125rem;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s ease;
+            min-width: 120px;
         }
 
-        .badge-genre {
-            background: #1e1e3a;
-            color: #7a8fff;
+        .filter-field input[type="text"] {
+            width: 180px;
         }
 
-        .badge-lang {
-            background: #3a2a1a;
-            color: #ffa850;
+        .filter-field input[type="text"]:focus,
+        .filter-field select:focus {
+            border-color: var(--accent-primary);
         }
 
-        .badge-runtime {
-            background: #2a2a2a;
-            color: #aaa;
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
         }
 
-        .badge-mpa {
-            background: #3a2a2a;
-            color: #ff7070;
+        /* ── Buttons ── */
+        .btn-primary {
+            padding: 9px 24px;
+            background: var(--accent-primary);
+            color: #000;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            font-family: 'Inter', sans-serif;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease;
         }
 
-        .movie-synopsis {
-            font-size: 13px;
-            color: #aaa;
-            margin: 8px 0;
-            line-height: 1.5;
-            max-height: 80px;
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-ghost {
+            padding: 9px 16px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.8125rem;
+            font-family: 'Inter', sans-serif;
+            border: 1px solid var(--text-disabled);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+            background: var(--bg-surface-hover);
+        }
+
+        /* ── Status ── */
+        #status {
+            margin: 12px 0 4px;
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            min-height: 20px;
+        }
+
+        /* ── Results Grid ── */
+        #results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 24px;
+        }
+
+        /* ── Movie Card (Poster Grid) ── */
+        .movie-card {
+            position: relative;
+            background: var(--bg-surface-1);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-1);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.04);
+            box-shadow: var(--shadow-2);
+        }
+
+        .movie-card .poster-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 2 / 3;
             overflow: hidden;
         }
 
-        .movie-synopsis.expanded {
-            max-height: none;
+        .movie-card .poster-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s ease;
         }
 
-        .toggle-synopsis {
-            font-size: 12px;
-            color: #6AC045;
-            cursor: pointer;
+        .movie-card:hover .poster-wrap img {
+            transform: scale(1.08);
+        }
+
+        /* ── Quality Badge on Poster ── */
+        .quality-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 3px 8px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            color: var(--accent-primary);
+            font-size: 0.6875rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            letter-spacing: 0.3px;
+        }
+
+        /* ── Hover Overlay ── */
+        .card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.2) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 16px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .movie-card:hover .card-overlay {
+            opacity: 1;
+        }
+
+        .card-overlay .overlay-rating {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--imdb-gold);
+            margin-bottom: 6px;
+        }
+
+        .card-overlay .overlay-genres {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
             margin-bottom: 10px;
-            display: inline-block;
         }
 
-        /* ── Torrents ── */
-        .torrents-label {
-            font-size: 12px;
-            color: #888;
+        .card-overlay .overlay-genres span {
+            padding: 2px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            border-radius: var(--radius-sm);
+            font-size: 0.6875rem;
+            color: var(--text-primary);
+        }
+
+        .card-overlay .overlay-cta {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Card Footer Text ── */
+        .card-info {
+            padding: 10px 12px 12px;
+        }
+
+        .card-info .card-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-info .card-year {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 2px;
+        }
+
+        .card-info .card-year span {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .card-info .card-year .card-rating {
+            color: var(--imdb-gold);
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        /* ── Skeleton Loading ── */
+        .skeleton-card {
+            background: var(--bg-surface-1);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .skeleton-poster {
+            width: 100%;
+            aspect-ratio: 2 / 3;
+            background: linear-gradient(90deg, var(--bg-surface-1) 25%, var(--bg-surface-hover) 50%, var(--bg-surface-1) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+        }
+
+        .skeleton-text {
+            padding: 10px 12px 12px;
+        }
+
+        .skeleton-line {
+            height: 12px;
+            background: linear-gradient(90deg, var(--bg-surface-1) 25%, var(--bg-surface-hover) 50%, var(--bg-surface-1) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+            border-radius: var(--radius-sm);
+            margin-bottom: 6px;
+        }
+
+        .skeleton-line.short {
+            width: 60%;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        /* ── Pagination ── */
+        #pagination {
+            margin-top: 32px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #pagination button {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-surface-1);
+            color: var(--text-secondary);
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.8125rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        #pagination button:hover:not(:disabled):not(.active) {
+            background: var(--bg-surface-hover);
+            color: var(--text-primary);
+        }
+
+        #pagination button.active {
+            background: var(--accent-primary);
+            color: #000;
+            font-weight: 600;
+        }
+
+        #pagination button:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        #pagination button.pg-nav {
+            width: auto;
+            padding: 0 14px;
+            font-weight: 500;
+        }
+
+        #page-info {
+            width: 100%;
+            text-align: center;
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        /* ── Modal Overlay ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ── Modal Container ── */
+        .modal-container {
+            position: relative;
+            width: 92%;
+            max-width: 1080px;
+            max-height: 90vh;
+            background: var(--bg-surface-2);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(30px);
+            transition: transform 0.35s ease;
+        }
+
+        .modal-overlay.open .modal-container {
+            transform: translateY(0);
+        }
+
+        .modal-backdrop-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 280px;
+            background-size: cover;
+            background-position: center top;
+            z-index: 0;
+        }
+
+        .modal-backdrop-img::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, var(--bg-surface-2) 10%, rgba(36, 36, 36, 0.85) 60%, rgba(36, 36, 36, 0.7) 100%);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 10;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            border: none;
+            border-radius: 50%;
+            color: var(--text-primary);
+            font-size: 1.125rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-scroll {
+            position: relative;
+            z-index: 1;
+            overflow-y: auto;
+            padding: 32px;
+            flex: 1;
+        }
+
+        .modal-body {
+            display: flex;
+            gap: 28px;
+            margin-top: 200px;
+        }
+
+        .modal-poster {
+            flex-shrink: 0;
+            width: 280px;
+        }
+
+        .modal-poster img {
+            width: 100%;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-2);
+            display: block;
+        }
+
+        .modal-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+
+        .modal-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+        }
+
+        .modal-meta .meta-dot {
+            color: var(--text-disabled);
+        }
+
+        .modal-meta .meta-rating {
+            color: var(--imdb-gold);
+            font-weight: 600;
+        }
+
+        .modal-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .modal-badges .mbadge {
+            padding: 4px 10px;
+            border: 1px solid #444;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .modal-badges .mbadge-genre {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .modal-synopsis {
+            font-size: 0.9375rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        .modal-actions a,
+        .modal-actions button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        /* ── Torrent Section in Modal ── */
+        .torrents-section {
+            border-top: 1px solid var(--bg-surface-1);
+            padding-top: 20px;
+        }
+
+        .torrents-section .torrents-label {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 6px;
+            margin-bottom: 12px;
         }
 
         .torrent-row {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 8px;
-            padding: 8px;
-            background: #111;
-            border-radius: 4px;
-            margin-bottom: 6px;
-            border: 1px solid #2a2a2a;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--bg-body);
+            border-radius: var(--radius-md);
+            margin-bottom: 8px;
+            border: 1px solid var(--bg-surface-1);
+            transition: border-color 0.2s ease;
+        }
+
+        .torrent-row:hover {
+            border-color: var(--bg-surface-hover);
         }
 
         .torrent-quality {
-            font-weight: bold;
-            font-size: 14px;
-            color: #6AC045;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--accent-primary);
             min-width: 80px;
         }
 
+        .torrent-quality .torrent-type {
+            font-size: 0.6875rem;
+            color: var(--text-disabled);
+            font-weight: 400;
+        }
+
         .torrent-info {
-            font-size: 12px;
-            color: #888;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
             flex: 1;
         }
 
         .torrent-seeds {
-            font-size: 12px;
+            font-size: 0.75rem;
             color: #5a9;
         }
 
         .torrent-peers {
-            font-size: 12px;
+            font-size: 0.75rem;
             color: #99a;
+        }
+
+        .torrent-stats-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .torrent-dl-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .btn-dl {
             padding: 5px 12px;
-            background: #1a3a10;
-            color: #6AC045;
-            border: 1px solid #6AC045;
-            border-radius: 4px;
-            font-size: 12px;
+            background: transparent;
+            color: var(--accent-primary);
+            border: 1px solid var(--accent-primary);
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-family: 'Inter', sans-serif;
             text-decoration: none;
             cursor: pointer;
+            transition: all 0.2s ease;
         }
 
         .btn-dl:hover {
-            background: #6AC045;
-            color: #111;
+            background: var(--accent-primary);
+            color: #000;
         }
 
         .btn-magnet {
             padding: 5px 12px;
-            background: #2a1a3a;
+            background: transparent;
             color: #b080ff;
             border: 1px solid #7050bb;
-            border-radius: 4px;
-            font-size: 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-family: 'Inter', sans-serif;
             text-decoration: none;
             cursor: pointer;
+            transition: all 0.2s ease;
         }
 
         .btn-magnet:hover {
@@ -353,164 +891,350 @@
             color: #fff;
         }
 
-        /* ── Pagination ── */
-        #pagination {
-            margin-top: 20px;
+        /* ── Footer ── */
+        footer {
             display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
             align-items: center;
+            justify-content: space-between;
+            padding: 24px 32px;
+            background: var(--bg-surface-1);
+            border-top: 1px solid var(--bg-surface-hover);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: auto;
         }
 
-        #pagination button {
-            padding: 6px 12px;
-            background: #222;
-            color: #ddd;
-            border: 1px solid #444;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
+        footer a {
+            color: var(--accent-primary);
+            text-decoration: none;
         }
 
-        #pagination button:hover {
-            background: #333;
+        footer a:hover {
+            text-decoration: underline;
         }
 
-        #pagination button.active {
-            background: #6AC045;
-            color: #111;
-            border-color: #6AC045;
-            font-weight: bold;
+        /* ── Empty State ── */
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+            color: var(--text-secondary);
         }
 
-        #pagination button:disabled {
-            opacity: 0.4;
-            cursor: default;
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
         }
 
-        #page-info {
-            font-size: 13px;
-            color: #888;
+        .empty-state p {
+            font-size: 1rem;
+            margin-bottom: 16px;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 10px 16px;
+            }
+
+            main {
+                padding: 0 16px 32px;
+            }
+
+            #results {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            /* ── Mobile Filter Bar: 2-column grid ── */
+            .filter-bar {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                padding: 14px;
+                gap: 10px;
+            }
+
+            .filter-field {
+                width: 100%;
+            }
+
+            .filter-field input[type="text"],
+            .filter-field select {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .filter-actions {
+                grid-column: 1 / -1;
+                justify-content: stretch;
+            }
+
+            .filter-actions .btn-primary,
+            .filter-actions .btn-ghost {
+                flex: 1;
+            }
+
+            /* ── Mobile Modal ── */
+            .modal-body {
+                flex-direction: column;
+                align-items: center;
+                margin-top: 160px;
+            }
+
+            .modal-poster {
+                width: 220px;
+            }
+
+            .modal-title {
+                font-size: 1.5rem;
+                text-align: center;
+            }
+
+            .modal-meta {
+                justify-content: center;
+            }
+
+            .modal-badges {
+                justify-content: center;
+            }
+
+            .modal-actions {
+                justify-content: center;
+            }
+
+            /* ── Mobile Torrent Rows: stacked card layout ── */
+            .torrent-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                padding: 12px 14px;
+            }
+
+            .torrent-quality {
+                display: flex;
+                align-items: baseline;
+                gap: 8px;
+                min-width: unset;
+                width: 100%;
+            }
+
+            .torrent-info {
+                width: 100%;
+                line-height: 1.5;
+            }
+
+            .torrent-row > .torrent-seeds,
+            .torrent-row > .torrent-peers {
+                display: inline;
+            }
+
+            .torrent-stats-row {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                width: 100%;
+            }
+
+            .torrent-dl-row {
+                display: flex;
+                gap: 8px;
+                width: 100%;
+            }
+
+            footer {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .search-wrap {
+                display: none;
+            }
+
+            .navbar-logo {
+                font-size: 1.1rem;
+            }
+
+            #results {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .modal-scroll {
+                padding: 16px;
+            }
+
+            .modal-poster {
+                width: 200px;
+            }
+
+            .modal-body {
+                margin-top: 120px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <h1>🎬 YTS POC — API Feature Test</h1>
+    <!-- ═══════════════ Navbar ═══════════════ -->
+    <nav class="navbar" id="navbar">
+        <a class="navbar-logo" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            yFetch
+        </a>
 
-    <!-- ══════════════════════════════════════
-     SECTION 1 — Autocomplete Search
-══════════════════════════════════════ -->
-    <h2>1 · Quick Search (Autocomplete)</h2>
-    <div id="autocomplete-wrap">
-        <input id="autocomplete-input" type="text" placeholder="Start typing a movie title…" autocomplete="off" />
-        <div id="suggestions"></div>
+        <div class="search-wrap" id="autocomplete-wrap">
+            <div class="search-bar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input id="autocomplete-input" type="text" placeholder="Search for movies, actors, genres..."
+                    autocomplete="off" />
+            </div>
+            <div class="suggestions" id="suggestions"></div>
+        </div>
+
+        <div class="nav-actions"></div>
+    </nav>
+
+    <!-- ═══════════════ Main Content ═══════════════ -->
+    <main>
+        <!-- Filter Bar -->
+        <form class="filter-bar" id="search-form">
+            <div class="filter-field">
+                <label>Keyword</label>
+                <input type="text" id="f-query" placeholder="e.g. inception" />
+            </div>
+
+            <div class="filter-field">
+                <label>Quality</label>
+                <select id="f-quality">
+                    <option value="">All</option>
+                    <option value="720p">720p</option>
+                    <option value="1080p">1080p</option>
+                    <option value="1080p.x265">1080p x265</option>
+                    <option value="2160p">4K (2160p)</option>
+                    <option value="3D">3D</option>
+                    <option value="480p">480p</option>
+                </select>
+            </div>
+
+            <div class="filter-field">
+                <label>Genre</label>
+                <select id="f-genre">
+                    <option value="">All</option>
+                    <option>Action</option>
+                    <option>Adventure</option>
+                    <option>Animation</option>
+                    <option>Biography</option>
+                    <option>Comedy</option>
+                    <option>Crime</option>
+                    <option>Documentary</option>
+                    <option>Drama</option>
+                    <option>Family</option>
+                    <option>Fantasy</option>
+                    <option>History</option>
+                    <option>Horror</option>
+                    <option>Music</option>
+                    <option>Musical</option>
+                    <option>Mystery</option>
+                    <option>Romance</option>
+                    <option>Sci-Fi</option>
+                    <option>Sport</option>
+                    <option>Thriller</option>
+                    <option>War</option>
+                    <option>Western</option>
+                </select>
+            </div>
+
+            <div class="filter-field">
+                <label>Min Rating</label>
+                <select id="f-rating">
+                    <option value="0">All</option>
+                    <option value="5">5+</option>
+                    <option value="6">6+</option>
+                    <option value="7">7+</option>
+                    <option value="8">8+</option>
+                    <option value="9">9+</option>
+                </select>
+            </div>
+
+            <div class="filter-field">
+                <label>Sort By</label>
+                <select id="f-sort">
+                    <option value="date_added">Latest</option>
+                    <option value="year">Year</option>
+                    <option value="rating">Rating</option>
+                    <option value="peers">Peers</option>
+                    <option value="seeds">Seeds</option>
+                    <option value="download_count">Downloads</option>
+                    <option value="like_count">Likes</option>
+                    <option value="title">Title (A-Z)</option>
+                </select>
+            </div>
+
+            <div class="filter-field">
+                <label>Order</label>
+                <select id="f-order">
+                    <option value="desc">Desc ↓</option>
+                    <option value="asc">Asc ↑</option>
+                </select>
+            </div>
+
+            <div class="filter-field">
+                <label>Per Page</label>
+                <select id="f-limit">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+
+            <div class="filter-actions">
+                <button type="submit" class="btn-primary">Search</button>
+                <button type="button" class="btn-ghost" id="btn-reset">Reset</button>
+            </div>
+        </form>
+
+        <!-- Section Header -->
+        <div class="section-header" id="section-header">
+            <h2 id="section-title">Recently Added</h2>
+            <span class="result-count" id="result-count"></span>
+        </div>
+
+        <!-- Status -->
+        <div id="status"></div>
+
+        <!-- Results Grid -->
+        <div id="results"></div>
+
+        <!-- Pagination -->
+        <div id="pagination"></div>
+    </main>
+
+    <!-- ═══════════════ Movie Detail Modal ═══════════════ -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-container" id="modal-container">
+            <div class="modal-backdrop-img" id="modal-backdrop"></div>
+            <button class="modal-close" id="modal-close" aria-label="Close modal">✕</button>
+            <div class="modal-scroll" id="modal-content"></div>
+        </div>
     </div>
 
-    <!-- ══════════════════════════════════════
-     SECTION 2 — Detailed Search Form
-══════════════════════════════════════ -->
-    <h2>2 · Detailed Search</h2>
-    <form id="search-form">
-        <div class="field">
-            <label>Keyword</label>
-            <input type="text" id="f-query" placeholder="e.g. inception" />
-        </div>
-
-        <div class="field">
-            <label>Quality</label>
-            <select id="f-quality">
-                <option value="">All</option>
-                <option value="720p">720p</option>
-                <option value="1080p">1080p</option>
-                <option value="1080p.x265">1080p x265</option>
-                <option value="2160p">4K (2160p)</option>
-                <option value="3D">3D</option>
-                <option value="480p">480p</option>
-            </select>
-        </div>
-
-        <div class="field">
-            <label>Genre</label>
-            <select id="f-genre">
-                <option value="">All</option>
-                <option>Action</option>
-                <option>Adventure</option>
-                <option>Animation</option>
-                <option>Biography</option>
-                <option>Comedy</option>
-                <option>Crime</option>
-                <option>Documentary</option>
-                <option>Drama</option>
-                <option>Family</option>
-                <option>Fantasy</option>
-                <option>History</option>
-                <option>Horror</option>
-                <option>Music</option>
-                <option>Musical</option>
-                <option>Mystery</option>
-                <option>Romance</option>
-                <option>Sci-Fi</option>
-                <option>Sport</option>
-                <option>Thriller</option>
-                <option>War</option>
-                <option>Western</option>
-            </select>
-        </div>
-
-        <div class="field">
-            <label>Min Rating</label>
-            <select id="f-rating">
-                <option value="0">All</option>
-                <option value="5">5+</option>
-                <option value="6">6+</option>
-                <option value="7">7+</option>
-                <option value="8">8+</option>
-                <option value="9">9+</option>
-            </select>
-        </div>
-
-        <div class="field">
-            <label>Sort By</label>
-            <select id="f-sort">
-                <option value="date_added">Latest</option>
-                <option value="year">Year</option>
-                <option value="rating">Rating</option>
-                <option value="peers">Peers</option>
-                <option value="seeds">Seeds</option>
-                <option value="download_count">Downloads</option>
-                <option value="like_count">Likes</option>
-                <option value="title">Title (A-Z)</option>
-            </select>
-        </div>
-
-        <div class="field">
-            <label>Order</label>
-            <select id="f-order">
-                <option value="desc">Desc ↓</option>
-                <option value="asc">Asc ↑</option>
-            </select>
-        </div>
-
-        <div class="field">
-            <label>Per Page</label>
-            <select id="f-limit">
-                <option value="10">10</option>
-                <option value="20" selected>20</option>
-                <option value="50">50</option>
-            </select>
-        </div>
-
-        <button type="submit">Search</button>
-    </form>
-
-    <!-- ══════════════════════════════════════
-     Status + Results + Pagination
-══════════════════════════════════════ -->
-    <div id="status"></div>
-    <div id="results"></div>
-    <div id="pagination"></div>
+    <!-- ═══════════════ Footer ═══════════════ -->
+    <footer>
+        <span>© 2024 yFetch. All rights reserved.</span>
+        <span>Powered by <a href="https://yts.mx/api" target="_blank">YTS API</a></span>
+    </footer>
 
     <script>
         /* ── Constants ── */
@@ -531,6 +1255,7 @@
         let currentParams = {};
         let totalMovies = 0;
         let currentLimit = 20;
+        let allMoviesCache = []; // cache for modal access
 
         /* ── Helpers ── */
         function buildMagnet(hash, title) {
@@ -548,58 +1273,146 @@
             return `${Math.floor(mins / 60)}h ${mins % 60}m`;
         }
 
-        /* ── Render a single movie card ── */
-        function renderMovie(m) {
+        function getBestQuality(torrents) {
+            if (!torrents || !torrents.length) return '';
+            const order = ['2160p', '1080p', '1080p.x265', '720p', '3D', '480p'];
+            for (const q of order) {
+                if (torrents.find(t => t.quality === q)) return q;
+            }
+            return torrents[0].quality || '';
+        }
+
+        /* ── Skeleton Loaders ── */
+        function renderSkeletons(count = 10) {
+            const html = Array.from({ length: count }, () => `
+                <div class="skeleton-card">
+                    <div class="skeleton-poster"></div>
+                    <div class="skeleton-text">
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line short"></div>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('results').innerHTML = html;
+        }
+
+        /* ── Render Movie Card (Poster Grid) ── */
+        function renderMovieCard(m, idx) {
+            const genres = (m.genres || []).slice(0, 3).map(g => `<span>${g}</span>`).join('');
+            const bestQ = getBestQuality(m.torrents);
+
+            return `
+            <div class="movie-card" onclick="openModal(${idx})" role="button" tabindex="0" aria-label="View details for ${m.title}">
+                <div class="poster-wrap">
+                    <img src="${m.medium_cover_image || m.small_cover_image}" alt="${m.title}" loading="lazy" />
+                    ${bestQ ? `<span class="quality-badge">${bestQ}</span>` : ''}
+                    <div class="card-overlay">
+                        ${m.rating ? `<div class="overlay-rating">⭐ ${m.rating}</div>` : ''}
+                        ${genres ? `<div class="overlay-genres">${genres}</div>` : ''}
+                        <div class="overlay-cta">View Details →</div>
+                    </div>
+                </div>
+                <div class="card-info">
+                    <div class="card-title">${m.title}</div>
+                    <div class="card-year">
+                        <span>${m.year || ''}</span>
+                        ${m.rating ? `<span class="card-rating">⭐ ${m.rating}</span>` : ''}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        /* ── Modal ── */
+        function openModal(idx) {
+            const m = allMoviesCache[idx];
+            if (!m) return;
+
+            const overlay = document.getElementById('modal-overlay');
+            const backdrop = document.getElementById('modal-backdrop');
+            const content = document.getElementById('modal-content');
+
+            // Set backdrop image
+            const bgImg = m.background_image_original || m.background_image || m.large_cover_image || m.medium_cover_image || '';
+            backdrop.style.backgroundImage = bgImg ? `url(${bgImg})` : 'none';
+
+            // Build torrent rows
             const torrentsHtml = (m.torrents || []).map(t => {
                 const magnet = buildMagnet(t.hash, m.title_long || m.title);
                 return `
-        <div class="torrent-row">
-          <span class="torrent-quality">${t.quality} <span style="font-size:11px;color:#666;font-weight:normal">${t.type}</span></span>
-          <span class="torrent-info">${t.video_codec || ''} · ${t.bit_depth || ''}bit · ${t.audio_channels || ''} · ${t.size}</span>
-          <span class="torrent-seeds">🌱 ${t.seeds}</span>
-          <span class="torrent-peers">👥 ${t.peers}</span>
-          <a class="btn-dl" href="${t.url}" download>⬇ .torrent</a>
-          <a class="btn-magnet" href="${magnet}">🧲 Magnet</a>
-        </div>`;
+                <div class="torrent-row">
+                    <span class="torrent-quality">${t.quality} <span class="torrent-type">${t.type || ''}</span></span>
+                    <span class="torrent-info">${t.video_codec || ''} · ${t.bit_depth || ''}bit · ${t.audio_channels || ''} · ${t.size}</span>
+                    <div class="torrent-stats-row">
+                        <span class="torrent-seeds">🌱 ${t.seeds}</span>
+                        <span class="torrent-peers">👥 ${t.peers}</span>
+                    </div>
+                    <div class="torrent-dl-row">
+                        <a class="btn-dl" href="${t.url}" download>⬇ .torrent</a>
+                        <a class="btn-magnet" href="${magnet}">🧲 Magnet</a>
+                    </div>
+                </div>`;
             }).join('');
 
-            const genres = (m.genres || []).map(g => `<span class="badge badge-genre">${g}</span>`).join('');
+            // Build genre badges
+            const genres = (m.genres || []).map(g => `<span class="mbadge mbadge-genre">${g}</span>`).join('');
+
+            // Build meta badges
+            const metaBadges = [];
+            if (getBestQuality(m.torrents)) metaBadges.push(`<span class="mbadge">${getBestQuality(m.torrents)}</span>`);
+            if (m.mpa_rating) metaBadges.push(`<span class="mbadge">${m.mpa_rating}</span>`);
+
             const imdbUrl = m.imdb_code ? `https://www.imdb.com/title/${m.imdb_code}` : '#';
             const trailerUrl = m.yt_trailer_code ? `https://www.youtube.com/watch?v=${m.yt_trailer_code}` : null;
-            const synopsis = m.summary || m.synopsis || m.description_full || 'No synopsis available.';
+            const synopsis = m.description_full || m.summary || m.synopsis || 'No synopsis available.';
 
-            return `
-      <div class="movie-card">
-        <div class="movie-poster">
-          <img src="${m.medium_cover_image || m.small_cover_image}" alt="${m.title}" loading="lazy" />
-        </div>
-        <div class="movie-meta">
-          <div class="movie-title">
-            <a href="${imdbUrl}" target="_blank">${m.title}</a>
-          </div>
-          <div class="movie-badges">
-            ${m.year ? `<span class="badge badge-year">${m.year}</span>` : ''}
-            ${m.rating ? `<span class="badge badge-rating">⭐ ${m.rating}</span>` : ''}
-            ${m.runtime ? `<span class="badge badge-runtime">🕐 ${runtimeFmt(m.runtime)}</span>` : ''}
-            ${m.mpa_rating ? `<span class="badge badge-mpa">${m.mpa_rating}</span>` : ''}
-            ${m.language ? `<span class="badge badge-lang">🌐 ${m.language.toUpperCase()}</span>` : ''}
-            ${genres}
-          </div>
-          <div class="movie-synopsis" id="synopsis-${m.id}">${synopsis}</div>
-          <span class="toggle-synopsis" onclick="toggleSynopsis(${m.id})">▼ Show more</span>
-          ${trailerUrl ? `<a href="${trailerUrl}" target="_blank" style="font-size:13px;color:#ff5050;margin-right:12px;">▶ Trailer</a>` : ''}
-          <div class="torrents-label" style="margin-top:10px">Available torrents</div>
-          ${torrentsHtml || '<div style="font-size:13px;color:#666">No torrents found for this movie.</div>'}
-        </div>
-      </div>`;
+            content.innerHTML = `
+            <div class="modal-body">
+                <div class="modal-poster">
+                    <img src="${m.large_cover_image || m.medium_cover_image || m.small_cover_image}" alt="${m.title}" />
+                </div>
+                <div class="modal-details">
+                    <h2 class="modal-title">${m.title}</h2>
+                    <div class="modal-meta">
+                        ${m.year ? `<span>${m.year}</span>` : ''}
+                        ${m.runtime ? `<span class="meta-dot">·</span><span>${runtimeFmt(m.runtime)}</span>` : ''}
+                        ${m.rating ? `<span class="meta-dot">·</span><span class="meta-rating">⭐ ${m.rating} IMDb</span>` : ''}
+                        ${m.language ? `<span class="meta-dot">·</span><span>${m.language.toUpperCase()}</span>` : ''}
+                    </div>
+                    <div class="modal-badges">
+                        ${metaBadges.join('')}
+                        ${genres}
+                    </div>
+                    <p class="modal-synopsis">${synopsis}</p>
+                    <div class="modal-actions">
+                        ${trailerUrl ? `<a href="${trailerUrl}" target="_blank" class="btn-primary" style="text-decoration:none">▶ Watch Trailer</a>` : ''}
+                        <a href="${imdbUrl}" target="_blank" class="btn-ghost" style="text-decoration:none">IMDb →</a>
+                    </div>
+                    ${(m.torrents && m.torrents.length) ? `
+                    <div class="torrents-section">
+                        <div class="torrents-label">Available Torrents</div>
+                        ${torrentsHtml}
+                    </div>` : ''}
+                </div>
+            </div>`;
+
+            overlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
         }
 
-        function toggleSynopsis(id) {
-            const el = document.getElementById(`synopsis-${id}`);
-            const btn = el.nextElementSibling;
-            el.classList.toggle('expanded');
-            btn.textContent = el.classList.contains('expanded') ? '▲ Show less' : '▼ Show more';
+        function closeModal() {
+            const overlay = document.getElementById('modal-overlay');
+            overlay.classList.remove('open');
+            document.body.style.overflow = '';
         }
+
+        // Modal close listeners
+        document.getElementById('modal-close').addEventListener('click', closeModal);
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal-overlay')) closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
 
         /* ── Pagination ── */
         function renderPagination(movieCount, limit, page) {
@@ -607,11 +1420,9 @@
             const pgDiv = document.getElementById('pagination');
             if (total <= 1) { pgDiv.innerHTML = ''; return; }
 
-            let html = `<span id="page-info">Page ${page} of ${total} (${movieCount} movies)</span>`;
+            let html = `<div id="page-info">Page ${page} of ${total} · ${movieCount.toLocaleString()} movies</div>`;
+            html += `<button class="pg-nav" ${page <= 1 ? 'disabled' : ''} onclick="gotoPage(${page - 1})">← Prev</button>`;
 
-            html += `<button ${page <= 1 ? 'disabled' : ''} onclick="gotoPage(${page - 1})">← Prev</button>`;
-
-            // Show up to 9 page buttons with ellipsis
             const range = [];
             for (let i = 1; i <= total; i++) {
                 if (i === 1 || i === total || (i >= page - 3 && i <= page + 3)) {
@@ -625,28 +1436,27 @@
                 prev = p;
             }
 
-            html += `<button ${page >= total ? 'disabled' : ''} onclick="gotoPage(${page + 1})">Next →</button>`;
+            html += `<button class="pg-nav" ${page >= total ? 'disabled' : ''} onclick="gotoPage(${page + 1})">Next →</button>`;
             pgDiv.innerHTML = html;
         }
 
         function gotoPage(n) {
             currentPage = n;
             fetchMovies({ ...currentParams, page: n, limit: currentLimit });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         /* ── Core fetch function ── */
         async function fetchMovies(params) {
-            setStatus('⏳ Fetching…');
-            document.getElementById('results').innerHTML = '';
+            setStatus('');
             document.getElementById('pagination').innerHTML = '';
+            renderSkeletons(parseInt(params.limit) || 20);
 
             const url = new URL(API);
             Object.entries(params).forEach(([k, v]) => {
                 if (v !== '' && v !== null && v !== undefined) url.searchParams.set(k, v);
             });
             url.searchParams.set('with_rt_ratings', 'true');
-
-            console.log('[POC] Fetching:', url.toString());
 
             try {
                 const res = await fetch(url.toString());
@@ -655,20 +1465,52 @@
 
                 const data = json.data;
                 if (!data || !data.movies || data.movies.length === 0) {
-                    setStatus('No movies found. Try different filters.');
+                    document.getElementById('results').innerHTML = `
+                        <div class="empty-state" style="grid-column: 1 / -1">
+                            <div class="empty-icon">🎬</div>
+                            <p>No movies found. Try different filters.</p>
+                            <button class="btn-ghost" onclick="resetFilters()">Reset Filters</button>
+                        </div>`;
+                    setStatus('');
                     return;
                 }
 
                 totalMovies = data.movie_count;
                 currentLimit = params.limit || 20;
-                setStatus(`✅ ${data.movie_count} movies found — showing page ${data.page_number}`);
+                allMoviesCache = data.movies;
 
-                document.getElementById('results').innerHTML = data.movies.map(renderMovie).join('');
+                // Update section header
+                document.getElementById('result-count').textContent = `${data.movie_count.toLocaleString()} movies found`;
+
+                setStatus('');
+                document.getElementById('results').innerHTML = data.movies.map((m, i) => renderMovieCard(m, i)).join('');
                 renderPagination(data.movie_count, currentLimit, data.page_number);
             } catch (err) {
-                setStatus(`❌ Error: ${err.message}`);
-                console.error(err);
+                document.getElementById('results').innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1">
+                        <div class="empty-icon">⚠️</div>
+                        <p>Failed to load movies: ${err.message}</p>
+                        <button class="btn-primary" onclick="fetchMovies(currentParams)">Retry</button>
+                    </div>`;
             }
+        }
+
+        /* ── Reset Filters ── */
+        function resetFilters() {
+            document.getElementById('f-query').value = '';
+            document.getElementById('f-quality').value = '';
+            document.getElementById('f-genre').value = '';
+            document.getElementById('f-rating').value = '0';
+            document.getElementById('f-sort').value = 'date_added';
+            document.getElementById('f-order').value = 'desc';
+            document.getElementById('f-limit').value = '20';
+
+            document.getElementById('section-title').textContent = 'Recently Added';
+
+            currentPage = 1;
+            currentParams = { sort_by: 'date_added', order_by: 'desc', limit: 20, page: 1 };
+            currentLimit = 20;
+            fetchMovies(currentParams);
         }
 
         /* ── Detailed search form handler ── */
@@ -686,14 +1528,22 @@
                 page: 1,
             };
             currentLimit = currentParams.limit;
+
+            // Update section title
+            const query = currentParams.query_term;
+            document.getElementById('section-title').textContent = query ? `Results for "${query}"` : 'Browse Movies';
+
             fetchMovies(currentParams);
         });
+
+        // Reset button handler
+        document.getElementById('btn-reset').addEventListener('click', resetFilters);
 
         /* ── Autocomplete ── */
         const acInput = document.getElementById('autocomplete-input');
         const sugDiv = document.getElementById('suggestions');
         let acTimer = null;
-        let acMovies = [];   // store full movie objects for quick open
+        let acMovies = [];
 
         acInput.addEventListener('input', () => {
             clearTimeout(acTimer);
@@ -712,6 +1562,7 @@
                 currentPage = 1;
                 currentParams = { query_term: q, sort_by: 'date_added', order_by: 'desc', limit: 20, page: 1 };
                 currentLimit = 20;
+                document.getElementById('section-title').textContent = `Results for "${q}"`;
                 fetchMovies(currentParams);
             }
         });
@@ -742,14 +1593,14 @@
         function renderSuggestions(movies, q) {
             if (movies.length === 0) { sugDiv.style.display = 'none'; return; }
             sugDiv.innerHTML = movies.map((m, i) => `
-      <div class="suggestion-item" onclick="selectSuggestion(${i})">
-        <img src="${m.small_cover_image}" alt="${m.title}" />
-        <div class="sug-info">
-          ${m.title}
-          <div class="sug-year">${m.year}${m.rating ? ` · ⭐ ${m.rating}` : ''}</div>
-        </div>
-      </div>
-    `).join('') + `<div class="sug-adv" onclick="searchAll('${q.replace(/'/g, "\\'")}')">🔍 Show all results for "${q}"</div>`;
+                <div class="suggestion-item" onclick="selectSuggestion(${i})">
+                    <img src="${m.small_cover_image}" alt="${m.title}" />
+                    <div>
+                        <div class="sug-info">${m.title}</div>
+                        <div class="sug-year">${m.year}${m.rating ? ` · ⭐ ${m.rating}` : ''}</div>
+                    </div>
+                </div>
+            `).join('') + `<div class="sug-adv" onclick="searchAll('${q.replace(/'/g, "\\'")}')">🔍 Show all results for "${q}"</div>`;
             sugDiv.style.display = 'block';
         }
 
@@ -758,10 +1609,9 @@
             if (!m) return;
             sugDiv.style.display = 'none';
             acInput.value = m.title;
-            // Show this single movie in results
-            setStatus(`✅ Showing: ${m.title_long || m.title}`);
-            document.getElementById('results').innerHTML = renderMovie(m);
-            document.getElementById('pagination').innerHTML = '';
+            // Open in modal directly
+            allMoviesCache = [m];
+            openModal(0);
         }
 
         function searchAll(q) {
@@ -770,8 +1620,15 @@
             currentPage = 1;
             currentParams = { query_term: q, sort_by: 'date_added', order_by: 'desc', limit: 20, page: 1 };
             currentLimit = 20;
+            document.getElementById('section-title').textContent = `Results for "${q}"`;
             fetchMovies(currentParams);
         }
+
+        /* ── Auto-load Recently Added on page load ── */
+        (function init() {
+            currentParams = { sort_by: 'date_added', order_by: 'desc', limit: 20, page: 1 };
+            fetchMovies(currentParams);
+        })();
     </script>
 </body>
 
